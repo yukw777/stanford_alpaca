@@ -208,6 +208,7 @@ def train():
         cache_dir=training_args.cache_dir,
     )
     if training_args.use_lora:
+        logging.warning("Using LoRA")
         model = get_peft_model(
             model,
             LoraConfig(
