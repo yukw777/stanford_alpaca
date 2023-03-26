@@ -67,10 +67,10 @@ class TrainingArguments(transformers.TrainingArguments):
 
 @dataclass
 class LoRAArguments:
-    r: int = field(default=8, metadata={"help": "lora rank"})
-    alpha: int = field(default=16)
-    dropout: float = field(default=0.05)
-    target_modules: list[str] = field(default_factory=lambda: ["q_proj", "v_proj"])
+    lora_r: int = field(default=8, metadata={"help": "lora rank"})
+    lora_alpha: int = field(default=16)
+    lora_dropout: float = field(default=0.05)
+    lora_target_modules: list[str] = field(default_factory=lambda: ["q_proj", "v_proj"])
 
 
 def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: str):
@@ -212,10 +212,10 @@ def train():
             model,
             LoraConfig(
                 task_type=TaskType.CAUSAL_LM,
-                r=lora_args.r,
-                lora_alpha=lora_args.alpha,
-                target_modules=lora_args.target_modules,
-                lora_dropout=lora_args.dropout,
+                r=lora_args.lora_r,
+                lora_alpha=lora_args.lora_alpha,
+                target_modules=lora_args.lora_target_modules,
+                lora_dropout=lora_args.lora_dropout,
             ),
         )
 
