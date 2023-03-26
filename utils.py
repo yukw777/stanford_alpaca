@@ -46,7 +46,7 @@ def openai_completion(
     max_batches=sys.maxsize,
     return_text=False,
     **decoding_kwargs,
-) -> Union[Union[StrOrOpenAIObject], Sequence[StrOrOpenAIObject], Sequence[Sequence[StrOrOpenAIObject]],]:
+) -> Union[StrOrOpenAIObject, Sequence[StrOrOpenAIObject], Sequence[Sequence[StrOrOpenAIObject]]]:
     """Decode with OpenAI API.
 
     Args:
@@ -72,7 +72,7 @@ def openai_completion(
     """
     is_single_prompt = isinstance(prompts, (str, dict))
     if is_single_prompt:
-        prompts = [prompts]
+        prompts = [prompts]  # type: ignore
 
     if max_batches < sys.maxsize:
         logging.warning(
@@ -81,7 +81,7 @@ def openai_completion(
         )
         max_instances = max_batches * batch_size
 
-    prompts = prompts[:max_instances]
+    prompts = prompts[:max_instances]  # type: ignore
     num_prompts = len(prompts)
     prompt_batches = [
         prompts[batch_id * batch_size : (batch_id + 1) * batch_size]

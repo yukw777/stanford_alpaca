@@ -32,11 +32,11 @@ def encode_prompt(prompt_instructions):
         (instruction, input, output) = task_dict["instruction"], task_dict["input"], task_dict["output"]
         instruction = re.sub(r"\s+", " ", instruction).strip().rstrip(":")
         input = "<noinput>" if input.lower() == "" else input
-        prompt += f"###\n"
+        prompt += "###\n"
         prompt += f"{idx + 1}. Instruction: {instruction}\n"
         prompt += f"{idx + 1}. Input:\n{input}\n"
         prompt += f"{idx + 1}. Output:\n{output}\n"
-    prompt += f"###\n"
+    prompt += "###\n"
     prompt += f"{idx + 2}. Instruction:"
     return prompt
 
@@ -52,7 +52,7 @@ def post_process_gpt3_response(num_prompt_instructions, response):
         if idx == len(raw_instructions) - 1 and response["finish_reason"] == "length":
             continue
         idx += num_prompt_instructions + 1
-        splitted_data = re.split(f"{idx}\.\s+(Instruction|Input|Output):", inst)
+        splitted_data = re.split(f"{idx}\\.\\s+(Instruction|Input|Output):", inst)
         if len(splitted_data) != 7:
             continue
         else:
@@ -87,7 +87,8 @@ def post_process_gpt3_response(num_prompt_instructions, response):
         blacklist += []
         if any(find_word_in_string(word, inst) for word in blacklist):
             continue
-        # We found that the model tends to add "write a program" to some existing instructions, which lead to a lot of such instructions.
+        # We found that the model tends to add "write a program" to some existing instructions, which lead to a lot of
+        # such instructions.
         # And it's a bit comfusing whether the model need to write a program or directly output the result.
         # Here we filter them out.
         # Note this is not a comprehensive filtering for all programming instructions.
@@ -118,7 +119,7 @@ def generate_instruction_following_data(
     top_p=1.0,
     num_cpus=16,
 ):
-    seed_tasks = [json.loads(l) for l in open(seed_tasks_path, "r")]
+    seed_tasks = [json.loads(line) for line in open(seed_tasks_path, "r")]
     seed_instruction_data = [
         {"instruction": t["instruction"], "input": t["instances"][0]["input"], "output": t["instances"][0]["output"]}
         for t in seed_tasks
