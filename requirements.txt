@@ -6,3 +6,4 @@ git+https://github.com/huggingface/transformers.git
 torch
 sentencepiece
 wandb
+peft

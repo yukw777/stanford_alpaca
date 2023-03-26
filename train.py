@@ -21,6 +21,7 @@ import torch
 import transformers
 from torch.utils.data import Dataset
 from transformers import Trainer
+from peft import LoraConfig, get_peft_model, TaskType
 
 import utils
 
@@ -61,6 +62,15 @@ class TrainingArguments(transformers.TrainingArguments):
         default=512,
         metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
     )
+    use_lora: bool = field(default=False)
+
+
+@dataclass
+class LoRAArguments:
+    r: int = field(default=8, metadata={"help": "lora rank"})
+    alpha: int = field(default=16)
+    dropout: float = field(default=0.05)
+    target_modules: list[str] = field(default_factory=lambda: ["q_proj", "v_proj"])
 
 
 def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: str):
@@ -190,13 +200,24 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer, dat
 
 
 def train():
-    parser = transformers.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
-    model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    parser = transformers.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments, LoRAArguments))
+    model_args, data_args, training_args, lora_args = parser.parse_args_into_dataclasses()
 
     model = transformers.AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
         cache_dir=training_args.cache_dir,
     )
+    if training_args.use_lora:
+        model = get_peft_model(
+            model,
+            LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=lora_args.r,
+                lora_alpha=lora_args.alpha,
+                target_modules=lora_args.target_modules,
+                lora_dropout=lora_args.dropout,
+            ),
+        )
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
