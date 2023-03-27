@@ -206,7 +206,7 @@ def train():
     if training_args.use_lora_8bit:
         logging.warning("Using LoRA and 8-bit training")
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_args.model_name_or_path, cache_dir=training_args.cache_dir, load_in_8bit=True
+            model_args.model_name_or_path, cache_dir=training_args.cache_dir, load_in_8bit=True, device_map="auto"
         )
         model = prepare_model_for_int8_training(model)
         model = get_peft_model(
