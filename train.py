@@ -220,6 +220,7 @@ def train():
                 lora_dropout=lora_args.lora_dropout,
             ),
         )
+        model.print_trainable_parameters()
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
