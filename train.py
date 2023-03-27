@@ -21,7 +21,7 @@ import torch
 import transformers
 from torch.utils.data import Dataset
 from transformers import Trainer
-from peft import LoraConfig, get_peft_model, TaskType
+from peft import LoraConfig, get_peft_model, TaskType, prepare_model_for_int8_training
 
 import utils
 
@@ -62,7 +62,7 @@ class TrainingArguments(transformers.TrainingArguments):
         default=512,
         metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
     )
-    use_lora: bool = field(default=False)
+    use_lora_8bit: bool = field(default=False)
 
 
 @dataclass
@@ -203,12 +203,12 @@ def train():
     parser = transformers.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments, LoRAArguments))
     model_args, data_args, training_args, lora_args = parser.parse_args_into_dataclasses()
 
-    model = transformers.AutoModelForCausalLM.from_pretrained(
-        model_args.model_name_or_path,
-        cache_dir=training_args.cache_dir,
-    )
-    if training_args.use_lora:
-        logging.warning("Using LoRA")
+    if training_args.use_lora_8bit:
+        logging.warning("Using LoRA and 8-bit training")
+        model = transformers.AutoModelForCausalLM.from_pretrained(
+            model_args.model_name_or_path, cache_dir=training_args.cache_dir, load_in_8bit=True
+        )
+        model = prepare_model_for_int8_training(model)
         model = get_peft_model(
             model,
             LoraConfig(
@@ -220,6 +220,11 @@ def train():
             ),
         )
         model.print_trainable_parameters()
+    else:
+        model = transformers.AutoModelForCausalLM.from_pretrained(
+            model_args.model_name_or_path,
+            cache_dir=training_args.cache_dir,
+        )
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
