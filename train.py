@@ -63,7 +63,6 @@ class TrainingArguments(transformers.TrainingArguments):
         metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
     )
     use_lora: bool = field(default=False)
-    torch_compile: bool = field(default=False)
 
 
 @dataclass
