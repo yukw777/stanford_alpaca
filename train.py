@@ -203,11 +203,25 @@ def train():
     parser = transformers.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments, LoRAArguments))
     model_args, data_args, training_args, lora_args = parser.parse_args_into_dataclasses()
 
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        model_args.model_name_or_path,
+        cache_dir=training_args.cache_dir,
+        model_max_length=training_args.model_max_length,
+        padding_side="right",
+        use_fast=False,
+    )
+
     if training_args.use_lora_8bit:
         logging.warning("Using LoRA and 8-bit training")
         model = transformers.AutoModelForCausalLM.from_pretrained(
             model_args.model_name_or_path, cache_dir=training_args.cache_dir, load_in_8bit=True, device_map="auto"
         )
+        if tokenizer.pad_token is None:
+            smart_tokenizer_and_embedding_resize(
+                special_tokens_dict=dict(pad_token=DEFAULT_PAD_TOKEN),
+                tokenizer=tokenizer,
+                model=model,
+            )
         model = prepare_model_for_int8_training(model)
         model = get_peft_model(
             model,
@@ -225,20 +239,13 @@ def train():
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
         )
+        if tokenizer.pad_token is None:
+            smart_tokenizer_and_embedding_resize(
+                special_tokens_dict=dict(pad_token=DEFAULT_PAD_TOKEN),
+                tokenizer=tokenizer,
+                model=model,
+            )
 
-    tokenizer = transformers.AutoTokenizer.from_pretrained(
-        model_args.model_name_or_path,
-        cache_dir=training_args.cache_dir,
-        model_max_length=training_args.model_max_length,
-        padding_side="right",
-        use_fast=False,
-    )
-    if tokenizer.pad_token is None:
-        smart_tokenizer_and_embedding_resize(
-            special_tokens_dict=dict(pad_token=DEFAULT_PAD_TOKEN),
-            tokenizer=tokenizer,
-            model=model,
-        )
     if "llama" in model_args.model_name_or_path:
         tokenizer.add_special_tokens(
             {
