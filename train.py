@@ -222,7 +222,10 @@ def train():
                 tokenizer=tokenizer,
                 model=model,
             )
-        model = prepare_model_for_int8_training(model)
+        # use_gradient_checkpointing=False since it doesn't play with torch.compile()
+        # https://github.com/pytorch/pytorch/issues/97077
+        # https://github.com/pytorch/pytorch/issues/97436
+        model = prepare_model_for_int8_training(model, use_gradient_checkpointing=False)
         model = get_peft_model(
             model,
             LoraConfig(
