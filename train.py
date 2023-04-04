@@ -56,6 +56,7 @@ class TrainingArguments(transformers.TrainingArguments):
         default=2048,
         metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
     )
+    val_set_size: int = field(default=2000)
     use_lora_8bit: bool = field(default=False)
 
 
@@ -136,12 +137,21 @@ def train() -> None:
         .map(generate_prompt, remove_columns=["instruction", "input", "output"])
         .map(partial(batch_tokenize, tokenizer), batched=True, remove_columns="prompt")
     )
+    if training_args.val_set_size > 0:
+        logging.warning("Splitting train and validation datasets")
+        train_val = dataset["train"].train_test_split(test_size=training_args.val_set_size, shuffle=True, seed=42)
+        train_data = train_val["train"]
+        val_data = train_val["test"]
+    else:
+        logging.warning("No validation set")
+        train_data = dataset["train"]
+        val_data = None
     trainer = Trainer(
         model=model,
         tokenizer=tokenizer,
         args=training_args,
-        train_dataset=dataset["train"],
-        eval_dataset=None,
+        train_dataset=train_data,
+        eval_dataset=val_data,
         data_collator=transformers.DataCollatorForLanguageModeling(
             tokenizer,
             mlm=False,
