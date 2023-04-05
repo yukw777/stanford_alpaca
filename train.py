@@ -112,7 +112,7 @@ def train() -> None:
     model = transformers.AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
         load_in_8bit=model_args.train_in_8bit,
-        device_map="auto" if model_args.train_in_8bit else model_args.device_map,
+        device_map="auto" if model_args.train_in_8bit and model_args.device_map is None else model_args.device_map,
     )
     if model_args.train_in_8bit:
         logging.warning("Preparing 8bit training")
