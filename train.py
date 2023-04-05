@@ -164,7 +164,7 @@ def train() -> None:
             pad_to_multiple_of=8 if training_args.fp16 else None,
         ),
     )
-    trainer.train()
+    trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
     model.save_pretrained(training_args.output_dir)
 
 
