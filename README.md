@@ -43,7 +43,6 @@ python train.py \
     --save_strategy "steps" \
     --save_steps 200 \
     --save_total_limit 3 \
-    --load_best_model_at_end True \
     --group_by_length True \
     --logging_steps 10
 ```
