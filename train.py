@@ -41,6 +41,7 @@ PROMPT_NO_INPUT = (
 @dataclass
 class ModelArguments:
     model_name_or_path: str
+    train_in_8bit: bool = field(default=False)
     device_map: Union[None, str, dict[str, Union[int, str, torch.device]]] = field(default=None)
 
 
@@ -57,7 +58,7 @@ class TrainingArguments(transformers.TrainingArguments):
         metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
     )
     val_set_size: int = field(default=2000)
-    use_lora_8bit: bool = field(default=False)
+    use_lora: bool = field(default=False)
 
 
 @dataclass
@@ -107,15 +108,16 @@ def train() -> None:
         # to use -100 for the eos token.
         tokenizer.pad_token = tokenizer.unk_token
 
-    if training_args.use_lora_8bit:
-        logging.warning("Using LoRA and 8-bit training")
-        model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_args.model_name_or_path, load_in_8bit=True, device_map=model_args.device_map
-        )
-        # use_gradient_checkpointing=False since it doesn't play with torch.compile()
-        # https://github.com/pytorch/pytorch/issues/97077
-        # https://github.com/pytorch/pytorch/issues/97436
-        model = prepare_model_for_int8_training(model, use_gradient_checkpointing=False)
+    model = transformers.AutoModelForCausalLM.from_pretrained(
+        model_args.model_name_or_path,
+        load_in_8bit=model_args.train_in_8bit,
+        device_map="auto" if model_args.train_in_8bit else model_args.device_map,
+    )
+    if model_args.train_in_8bit:
+        logging.warning("Preparing 8bit training")
+        model = prepare_model_for_int8_training(model)
+    if training_args.use_lora:
+        logging.warning("Using LoRA")
         model = get_peft_model(
             model,
             LoraConfig(
@@ -127,10 +129,14 @@ def train() -> None:
             ),
         )
         model.print_trainable_parameters()
-    else:
-        model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_args.model_name_or_path, device_map=model_args.device_map
-        )
+
+    if not model.is_gradient_checkpointing and not training_args.gradient_checkpointing:
+        logging.warning("Calling torch.compile()")
+        # torch.compile() only if we're not using gradient checkpointing as
+        # it doesn't play well with torch.compile()
+        # https://github.com/pytorch/pytorch/issues/97077
+        # https://github.com/pytorch/pytorch/issues/97436
+        model = torch.compile(model)
 
     dataset = (
         load_dataset("json", data_files=data_args.data_path)
