@@ -148,6 +148,9 @@ def train() -> None:
         train_val = dataset["train"].train_test_split(test_size=training_args.val_set_size, shuffle=True, seed=42)
         train_data = train_val["train"]
         val_data = train_val["test"]
+
+        # Load the best model at the end so we can save it
+        training_args.load_best_model_at_end = True
     else:
         logging.warning("No validation set")
         train_data = dataset["train"]
