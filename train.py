@@ -155,6 +155,9 @@ def train() -> None:
         logging.warning("No validation set")
         train_data = dataset["train"]
         val_data = None
+
+    print(training_args)
+
     trainer = Trainer(
         model=model,
         tokenizer=tokenizer,
