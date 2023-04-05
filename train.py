@@ -59,6 +59,7 @@ class TrainingArguments(transformers.TrainingArguments):
     )
     val_set_size: int = field(default=2000)
     use_lora: bool = field(default=False)
+    use_ddp: bool = field(default=True)
 
 
 @dataclass
@@ -157,6 +158,15 @@ def train() -> None:
         val_data = None
 
     print(training_args)
+
+    if not training_args.use_ddp and torch.cuda.device_count() > 1:
+        # When there are multiple GPUs and this script is called without torchrun,
+        # Trainer will automatically use model parallelism (unless disabled through device_map).
+        # This should prevent DDP automatically, but LlamaModel doesn't seem to do this automatically,
+        # so we need to force this behavior manually.
+        # https://github.com/huggingface/transformers/blob/126eafe396df3f7307cf2dc54a158692ca970f9f/src/transformers/trainer.py#L375
+        model.is_parallelizable = True
+        model.model_parallel = True
 
     trainer = Trainer(
         model=model,
