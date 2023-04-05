@@ -143,6 +143,9 @@ def train() -> None:
         # https://github.com/pytorch/pytorch/issues/97077
         # https://github.com/pytorch/pytorch/issues/97436
         model = torch.compile(model)
+    else:
+        # we're using gradient checkpointing, disable cache as it's incompatible.
+        model.config.use_cache = False
 
     dataset = (
         load_dataset("json", data_files=data_args.data_path)
