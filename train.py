@@ -13,8 +13,9 @@
 #    limitations under the License.
 
 import logging
+import json
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, Optional
 from functools import partial
 
 import torch
@@ -43,6 +44,7 @@ class ModelArguments:
     model_name_or_path: str
     train_in_8bit: bool = field(default=False)
     device_map: Union[None, str, dict[str, Union[int, str, torch.device]]] = field(default=None)
+    max_memory_config: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -113,6 +115,9 @@ def train() -> None:
         model_args.model_name_or_path,
         load_in_8bit=model_args.train_in_8bit,
         device_map="auto" if model_args.train_in_8bit and model_args.device_map is None else model_args.device_map,
+        max_memory={int(k): v for k, v in json.loads(model_args.max_memory_config).items() if k.isnumeric()}
+        if model_args.max_memory_config is not None
+        else None,
     )
     if model_args.train_in_8bit:
         logging.warning("Preparing 8bit training")
