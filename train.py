@@ -166,6 +166,7 @@ def train() -> None:
     )
     trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
     model.save_pretrained(training_args.output_dir)
+    tokenizer.save_pretrained(training_args.output_dir)
 
 
 if __name__ == "__main__":
