@@ -165,7 +165,7 @@ def train() -> None:
         ),
     )
     trainer.train()
-    trainer.save_model()
+    model.save_pretrained(training_args.output_dir)
 
 
 if __name__ == "__main__":
