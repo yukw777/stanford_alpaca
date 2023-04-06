@@ -1,0 +1,45 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "default",
+  "dataset_size": 18997799,
+  "description": "",
+  "download_checksums": {
+    "/home/kpyu/programming/stanford_alpaca/alpaca_data_cleaned.json": {
+      "num_bytes": 22764890,
+      "checksum": null
+    }
+  },
+  "download_size": 22764890,
+  "features": {
+    "instruction": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "input": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "output": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 41762689,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 18997799,
+      "num_examples": 51942,
+      "dataset_name": "json"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

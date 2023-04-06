@@ -50,7 +50,7 @@ class ModelArguments:
 
 @dataclass
 class DataArguments:
-    data_path: str = field(default="alpaca_data_cleaned.json", metadata={"help": "Path to the training data."})
+    data_path: str = field(default="dataset", metadata={"help": "Path to the training data."})
 
 
 @dataclass
@@ -60,7 +60,6 @@ class TrainingArguments(transformers.TrainingArguments):
         default=2048,
         metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
     )
-    val_set_size: int = field(default=2000)
     use_lora: bool = field(default=False)
     use_ddp: bool = field(default=True)
 
@@ -151,22 +150,10 @@ def train() -> None:
         model.config.use_cache = False
 
     dataset = (
-        load_dataset("json", data_files=data_args.data_path)
+        load_dataset("dataset")
         .map(generate_prompt, remove_columns=["instruction", "input", "output"])
         .map(partial(batch_tokenize, tokenizer), batched=True, remove_columns="prompt")
     )
-    if training_args.val_set_size > 0:
-        logging.warning("Splitting train and validation datasets")
-        train_val = dataset["train"].train_test_split(test_size=training_args.val_set_size, shuffle=True, seed=42)
-        train_data = train_val["train"]
-        val_data = train_val["test"]
-
-        # Load the best model at the end so we can save it
-        training_args.load_best_model_at_end = True
-    else:
-        logging.warning("No validation set")
-        train_data = dataset["train"]
-        val_data = None
 
     if not training_args.use_ddp and torch.cuda.device_count() > 1:
         # When there are multiple GPUs and this script is called without torchrun,
@@ -177,12 +164,14 @@ def train() -> None:
         model.is_parallelizable = True
         model.model_parallel = True
 
+    # Load the best model at the end so we can save it
+    training_args.load_best_model_at_end = True
     trainer = Trainer(
         model=model,
         tokenizer=tokenizer,
         args=training_args,
-        train_dataset=train_data,
-        eval_dataset=val_data,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["validation"],
         data_collator=transformers.DataCollatorForLanguageModeling(
             tokenizer,
             mlm=False,
