@@ -47,6 +47,49 @@ python train.py \
     --logging_steps 10
 ```
 
+### Alpaca-LoRA 13B
+Training time: around 13h 45m on one A40.
+```bash
+#!/bin/bash
+
+#SBATCH --partition=spgpu
+#SBATCH --time=01-00:00:00
+
+### request 1 node with 1 gpus, total of 1 gpus (WORLD_SIZE==1)
+### Based on https://gist.github.com/TengdaHan/1dd10d335c7ca6f13810fff41e809904
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=32GB
+
+# set up job
+module load python/3.10.4 cuda
+pushd /home/kpyu/research/stanford_alpaca
+source .venv/bin/activate
+
+# run job
+# Hyperparameters closely resemble those of Alpaca-LoRA.
+# https://github.com/tloen/alpaca-lora#official-weights
+python train.py \
+    --model_name_or_path /nfs/turbo/coe-chaijy/pre-trained-weights/LLaMA-hf/13B \
+    --output_dir /nfs/turbo/coe-chaijy/pre-trained-weights/Alpaca-LoRA/13B \
+    --num_train_epochs 10 \
+    --learning_rate 3e-4 \
+    --per_device_train_batch_size 32 \
+    --gradient_accumulation_steps 4 \
+    --fp16 True \
+    --use_lora True \
+    --train_in_8bit True \
+    --warmup_steps 100 \
+    --evaluation_strategy "steps" \
+    --eval_steps 200 \
+    --save_strategy "steps" \
+    --save_steps 200 \
+    --save_total_limit 3 \
+    --group_by_length True \
+    --logging_steps 10
+```
 
 <p align="center" width="100%">
 <a href="https://crfm.stanford.edu/alpaca/" target="_blank"><img src="assets/logo.png" alt="Stanford-Alpaca" style="width: 50%; min-width: 300px; display: block; margin: auto;"></a>
