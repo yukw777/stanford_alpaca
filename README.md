@@ -72,8 +72,8 @@ source .venv/bin/activate
 # Hyperparameters closely resemble those of Alpaca-LoRA.
 # https://github.com/tloen/alpaca-lora#official-weights
 python train.py \
-    --model_name_or_path /nfs/turbo/coe-chaijy/pre-trained-weights/LLaMA-hf/13B \
-    --output_dir /nfs/turbo/coe-chaijy/pre-trained-weights/Alpaca-LoRA/13B \
+    --model_name_or_path <path_to_converted_llama_weights> \
+    --output_dir <path_to_output_dir> \
     --num_train_epochs 10 \
     --learning_rate 3e-4 \
     --per_device_train_batch_size 32 \

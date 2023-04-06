@@ -10,3 +10,4 @@ peft
 accelerate
 bitsandbytes
 datasets
+deepspeed
