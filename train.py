@@ -139,14 +139,7 @@ def train() -> None:
         )
         model.print_trainable_parameters()
 
-    if not model.is_gradient_checkpointing and not training_args.gradient_checkpointing:
-        logging.warning("Calling torch.compile()")
-        # torch.compile() only if we're not using gradient checkpointing as
-        # it doesn't play well with torch.compile()
-        # https://github.com/pytorch/pytorch/issues/97077
-        # https://github.com/pytorch/pytorch/issues/97436
-        model = torch.compile(model)
-    else:
+    if model.is_gradient_checkpointing or training_args.gradient_checkpointing:
         # we're using gradient checkpointing, disable cache as it's incompatible.
         model.config.use_cache = False
 
