@@ -168,8 +168,6 @@ def train() -> None:
         train_data = dataset["train"]
         val_data = None
 
-    print(training_args)
-
     if not training_args.use_ddp and torch.cuda.device_count() > 1:
         # When there are multiple GPUs and this script is called without torchrun,
         # Trainer will automatically use model parallelism (unless disabled through device_map).
