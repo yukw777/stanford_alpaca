@@ -22,7 +22,7 @@ import torch
 import transformers
 from transformers import Trainer
 from peft import LoraConfig, get_peft_model, TaskType, prepare_model_for_int8_training
-from datasets import load_dataset
+from datasets import load_from_disk
 
 
 PROMPT_INPUT = (
@@ -150,7 +150,7 @@ def train() -> None:
         model.config.use_cache = False
 
     dataset = (
-        load_dataset("dataset")
+        load_from_disk(data_args.data_path)
         .map(generate_prompt, remove_columns=["instruction", "input", "output"])
         .map(partial(batch_tokenize, tokenizer), batched=True, remove_columns="prompt")
     )
