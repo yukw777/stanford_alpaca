@@ -2,11 +2,6 @@
 
 This fork is a cleaned up version of the original [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) code and [Alpaca-LoRA](https://github.com/tloen/alpaca-lora).
 
-## Train/Validation Dataset Generation
-```bash
-python train_val_split.py alpaca_data_cleaned.json 2000 dataset
-```
-
 ## Training Scripts for Models
 ### Alpaca-LoRA 7B
 Training time: around 8h 20m on one A40.
