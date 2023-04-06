@@ -3,6 +3,7 @@ rouge_score
 fire
 openai
 git+https://github.com/huggingface/transformers.git
+git+https://github.com/huggingface/accelerate.git
 torch
 sentencepiece
 wandb
