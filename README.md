@@ -42,6 +42,7 @@ python train.py \
     --fp16 True \
     --use_lora True \
     --train_in_8bit True \
+    --load_base_model_in_8bit True \
     --warmup_steps 100 \
     --evaluation_strategy "steps" \
     --eval_steps 200 \
@@ -70,7 +71,7 @@ Training time: around 13h 45m on one A40.
 
 # set up job
 module load python/3.10.4 cuda
-pushd /home/kpyu/research/stanford_alpaca
+pushd <path_to_repo>
 source .venv/bin/activate
 
 # run job
@@ -86,6 +87,7 @@ python train.py \
     --fp16 True \
     --use_lora True \
     --train_in_8bit True \
+    --load_base_model_in_8bit True \
     --warmup_steps 100 \
     --evaluation_strategy "steps" \
     --eval_steps 200 \
