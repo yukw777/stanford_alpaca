@@ -150,23 +150,24 @@ def train() -> None:
         # we're using gradient checkpointing, disable cache as it's incompatible.
         model.config.use_cache = False
 
-    dataset = (
-        load_dataset("json", data_files=data_args.data_path)
-        .map(generate_prompt, remove_columns=["instruction", "input", "output"])
-        .map(partial(batch_tokenize, tokenizer), batched=True, remove_columns="prompt")
-    )
-    if training_args.val_set_size > 0:
-        logging.warning("Splitting train and validation datasets")
-        train_val = dataset["train"].train_test_split(test_size=training_args.val_set_size, shuffle=True, seed=42)
-        train_data = train_val["train"]
-        val_data = train_val["test"]
+    with training_args.main_process_first(desc="load and preprocess dataset"):
+        dataset = (
+            load_dataset("json", data_files=data_args.data_path)
+            .map(generate_prompt, remove_columns=["instruction", "input", "output"])
+            .map(partial(batch_tokenize, tokenizer), batched=True, remove_columns="prompt")
+        )
+        if training_args.val_set_size > 0:
+            logging.warning("Splitting train and validation datasets")
+            train_val = dataset["train"].train_test_split(test_size=training_args.val_set_size, shuffle=True, seed=42)
+            train_data = train_val["train"]
+            val_data = train_val["test"]
 
-        # Load the best model at the end so we can save it
-        training_args.load_best_model_at_end = True
-    else:
-        logging.warning("No validation set")
-        train_data = dataset["train"]
-        val_data = None
+            # Load the best model at the end so we can save it
+            training_args.load_best_model_at_end = True
+        else:
+            logging.warning("No validation set")
+            train_data = dataset["train"]
+            val_data = None
 
     if not training_args.use_ddp and torch.cuda.device_count() > 1:
         # When there are multiple GPUs and this script is called without torchrun,
