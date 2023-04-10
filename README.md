@@ -3,7 +3,7 @@
 This fork is a cleaned up version of the original [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) code and [Alpaca-LoRA](https://github.com/tloen/alpaca-lora).
 
 ## Training Scripts for Models
-### Alpaca-LoRA 7B
+### Alpaca-LoRA 7B 8-bit
 Training time: around 8h 20m on one A40.
 ```bash
 #!/bin/bash
@@ -48,7 +48,7 @@ python train.py \
     --logging_steps 10
 ```
 
-### Alpaca-LoRA 13B
+### Alpaca-LoRA 13B 8-bit
 Training time: around 13h 45m on one A40.
 ```bash
 #!/bin/bash
@@ -91,6 +91,52 @@ python train.py \
     --save_total_limit 3 \
     --group_by_length True \
     --logging_steps 10
+```
+
+### Alpaca-LoRA 30B 8-bit
+Training time: around 33h 55m on two A40s.
+```bash
+#!/bin/bash
+
+#SBATCH --partition=spgpu
+#SBATCH --time=02-12:00:00
+
+### request 1 node with 2 gpus, total of 2 gpus
+### Based on https://gist.github.com/TengdaHan/1dd10d335c7ca6f13810fff41e809904
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=2
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=32GB
+
+# set up job
+module load python/3.10.4 cuda
+pushd /home/kpyu/research/stanford_alpaca
+source .venv/bin/activate
+
+# run job
+# Hyperparameters closely resemble those of Alpaca-LoRA.
+# https://github.com/tloen/alpaca-lora#official-weights
+python train.py \
+    --model_name_or_path <path_to_converted_llama_weights> \
+    --output_dir <path_to_output_dir> \
+    --num_train_epochs 10 \
+    --learning_rate 3e-4 \
+    --per_device_train_batch_size 16 \
+    --gradient_accumulation_steps 8 \
+    --fp16 True \
+    --use_lora True \
+    --train_in_8bit True \
+    --load_base_model_in_8bit True \
+    --warmup_steps 100 \
+    --evaluation_strategy "steps" \
+    --eval_steps 200 \
+    --save_strategy "steps" \
+    --save_steps 200 \
+    --save_total_limit 3 \
+    --group_by_length True \
+    --logging_steps 10 \
+    --use_ddp False
 ```
 
 <p align="center" width="100%">
