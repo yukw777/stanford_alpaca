@@ -127,6 +127,9 @@ def train() -> None:
         model = prepare_model_for_int8_training(model)
     if training_args.use_lora:
         logging.warning("Using LoRA")
+        if model.is_gradient_checkpointing or training_args.gradient_checkpointing:
+            # https://github.com/huggingface/peft/issues/137
+            model.enable_input_require_grads()
         model = get_peft_model(
             model,
             LoraConfig(
