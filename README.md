@@ -25,7 +25,6 @@ pushd <path_to_repo>
 source .venv/bin/activate
 
 # run job
-# export WORLD_SIZE=2
 torchrun --nproc_per_node=2 train.py \
     --model_name_or_path <path_to_converted_llama_weights> \
     --output_dir <path_to_output_dir> \
@@ -55,7 +54,7 @@ Training time: around 8h 20m on one A40.
 #SBATCH --partition=spgpu
 #SBATCH --time=04-00:00:00
 
-### request 1 node with 1 gpus, total of 1 gpus (WORLD_SIZE==1)
+### request 1 node with 1 gpus, total of 1 gpus
 ### Based on https://gist.github.com/TengdaHan/1dd10d335c7ca6f13810fff41e809904
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -100,7 +99,7 @@ Training time: around 13h 45m on one A40.
 #SBATCH --partition=spgpu
 #SBATCH --time=01-00:00:00
 
-### request 1 node with 1 gpus, total of 1 gpus (WORLD_SIZE==1)
+### request 1 node with 1 gpus, total of 1 gpus
 ### Based on https://gist.github.com/TengdaHan/1dd10d335c7ca6f13810fff41e809904
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
