@@ -3,6 +3,50 @@
 This fork is a cleaned up version of the original [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) code and [Alpaca-LoRA](https://github.com/tloen/alpaca-lora).
 
 ## Training Scripts for Models
+### Alpaca-LoRA 7B
+Training time: around 4h 20m on two A40s.
+```bash
+#!/bin/bash
+
+#SBATCH --partition=spgpu
+#SBATCH --time=00-08:00:00
+
+### request 1 node with 2 gpus, total of 2 gpus
+### Based on https://gist.github.com/TengdaHan/1dd10d335c7ca6f13810fff41e809904
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=2
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=32GB
+
+# set up job
+module load python/3.10.4 cuda
+pushd <path_to_repo>
+source .venv/bin/activate
+
+# run job
+# export WORLD_SIZE=2
+torchrun --nproc_per_node=2 train.py \
+    --model_name_or_path <path_to_converted_llama_weights> \
+    --output_dir <path_to_output_dir> \
+    --num_train_epochs 10 \
+    --learning_rate 3e-4 \
+    --per_device_train_batch_size 16 \
+    --gradient_accumulation_steps 4 \
+    --bf16 True \
+    --use_lora True \
+    --warmup_steps 100 \
+    --evaluation_strategy "steps" \
+    --eval_steps 200 \
+    --save_strategy "steps" \
+    --save_steps 200 \
+    --save_total_limit 3 \
+    --group_by_length True \
+    --logging_steps 10 \
+    --gradient_checkpointing True \
+    --ddp_find_unused_parameters False
+```
+
 ### Alpaca-LoRA 7B 8-bit
 Training time: around 8h 20m on one A40.
 ```bash
@@ -111,7 +155,7 @@ Training time: around 33h 55m on two A40s.
 
 # set up job
 module load python/3.10.4 cuda
-pushd /home/kpyu/research/stanford_alpaca
+pushd <path_to_repo>
 source .venv/bin/activate
 
 # run job
