@@ -2,7 +2,7 @@ numpy
 rouge_score
 fire
 openai
-git+https://github.com/huggingface/transformers.git
+transformers
 git+https://github.com/huggingface/accelerate.git
 torch
 sentencepiece
