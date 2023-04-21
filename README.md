@@ -265,6 +265,51 @@ python train.py \
     --use_ddp False
 ```
 
+### Alpaca-LoRA 65B 8-bit
+Training time: around 2d 12h 5m on four A40s.
+```bash
+#!/bin/bash
+
+#SBATCH --partition=spgpu
+#SBATCH --time=05-00:00:00
+
+### request 1 node with 4 gpus, total of 4 gpus
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=4
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32GB
+
+# set up job
+module load python/3.10.4 cuda
+pushd <path_to_repo>
+source .venv/bin/activate
+
+# run job
+# Hyperparameters closely resemble those of Alpaca-LoRA.
+# https://github.com/tloen/alpaca-lora#official-weights
+python train.py \
+    --model_name_or_path <path_to_converted_llama_weights> \
+    --output_dir <path_to_output_dir> \
+    --num_train_epochs 10 \
+    --learning_rate 3e-4 \
+    --per_device_train_batch_size 16 \
+    --gradient_accumulation_steps 8 \
+    --fp16 True \
+    --use_lora True \
+    --train_in_8bit True \
+    --load_base_model_in_8bit True \
+    --warmup_steps 100 \
+    --evaluation_strategy "steps" \
+    --eval_steps 200 \
+    --save_strategy "steps" \
+    --save_steps 200 \
+    --save_total_limit 3 \
+    --group_by_length True \
+    --logging_steps 10 \
+    --use_ddp False
+```
+
 <p align="center" width="100%">
 <a href="https://crfm.stanford.edu/alpaca/" target="_blank"><img src="assets/logo.png" alt="Stanford-Alpaca" style="width: 50%; min-width: 300px; display: block; margin: auto;"></a>
 </p>
