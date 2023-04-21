@@ -91,6 +91,89 @@ python train.py \
     --logging_steps 10
 ```
 
+### Alpaca-LoRA 13B
+Training time: around 17h 35m on two A40s.
+```bash
+#!/bin/bash
+
+#SBATCH --partition=spgpu
+#SBATCH --time=00-24:00:00
+
+### request 1 node with 2 gpus, total of 2 gpus
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=2
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=32GB
+
+# set up job
+module load python/3.10.4 cuda
+pushd <path_to_repo>
+source .venv/bin/activate
+
+# run job
+echo '{
+    "bf16": {
+        "enabled": "auto"
+    },
+    "optimizer": {
+        "type": "AdamW",
+        "params": {
+            "lr": "auto",
+            "betas": "auto",
+            "eps": "auto",
+            "weight_decay": "auto"
+        }
+    },
+    "scheduler": {
+        "type": "WarmupLR",
+        "params": {
+            "warmup_min_lr": "auto",
+            "warmup_max_lr": "auto",
+            "warmup_num_steps": "auto"
+        }
+    },
+    "zero_optimization": {
+        "stage": 2,
+        "offload_optimizer": {
+            "device": "none",
+            "pin_memory": true
+        },
+        "allgather_partitions": true,
+        "allgather_bucket_size": 2e8,
+        "overlap_comm": true,
+        "reduce_scatter": true,
+        "reduce_bucket_size": 2e8,
+        "contiguous_gradients": true
+    },
+    "gradient_accumulation_steps": "auto",
+    "gradient_clipping": "auto",
+    "steps_per_print": 2000,
+    "train_batch_size": "auto",
+    "train_micro_batch_size_per_gpu": "auto",
+    "wall_clock_breakdown": false
+}' > ds_config_alpaca_lora_13B.json
+
+torchrun --nproc_per_node=2 train.py \
+    --model_name_or_path <path_to_converted_llama_weights> \
+    --output_dir <path_to_output_dir> \
+    --num_train_epochs 10 \
+    --learning_rate 3e-4 \
+    --per_device_train_batch_size 1 \
+    --gradient_accumulation_steps 64 \
+    --bf16 True \
+    --use_lora True \
+    --warmup_steps 100 \
+    --evaluation_strategy "steps" \
+    --eval_steps 200 \
+    --save_strategy "steps" \
+    --save_steps 200 \
+    --save_total_limit 3 \
+    --group_by_length True \
+    --logging_steps 10 \
+    --deepspeed ds_config_alpaca_lora_13B.json
+```
+
 ### Alpaca-LoRA 13B 8-bit
 Training time: around 13h 45m on one A40.
 ```bash
