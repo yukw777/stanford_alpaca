@@ -21,6 +21,7 @@ from functools import partial
 import torch
 import transformers
 from transformers import Trainer
+from transformers.deepspeed import is_deepspeed_zero3_enabled
 from peft import LoraConfig, get_peft_model, TaskType, prepare_model_for_int8_training
 from datasets import load_dataset
 
@@ -121,6 +122,7 @@ def train() -> None:
         max_memory={int(k): v for k, v in json.loads(model_args.max_memory_config).items() if k.isnumeric()}
         if model_args.max_memory_config is not None
         else None,
+        low_cpu_mem_usage=False if is_deepspeed_zero3_enabled() else True,
     )
     if model_args.train_in_8bit:
         logging.warning("Preparing 8bit training")
